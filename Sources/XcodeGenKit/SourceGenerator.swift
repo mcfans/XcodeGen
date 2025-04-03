@@ -53,31 +53,31 @@ class SourceGenerator {
     }
 
     func createLocalPackage(path: Path, group: Path?) throws {
-        var parentGroup: String = project.options.localPackagesGroup ?? "Packages"
-        if let group {
-          parentGroup = group.string
-        }
+        // var parentGroup: String = project.options.localPackagesGroup ?? "Packages"
+        // if let group {
+        //   parentGroup = group.string
+        // }
 
-        let absolutePath = project.basePath + path.normalize()
+        // let absolutePath = project.basePath + path.normalize()
 
-        // Get the local package's relative path from the project root
-        let fileReferencePath = try? absolutePath.relativePath(from: projectDirectory ?? project.basePath).string
+        // // Get the local package's relative path from the project root
+        // let fileReferencePath = try? absolutePath.relativePath(from: projectDirectory ?? project.basePath).string
 
-        let fileReference = addObject(
-            PBXFileReference(
-                sourceTree: .sourceRoot,
-                name: absolutePath.lastComponent,
-                lastKnownFileType: "folder",
-                path: fileReferencePath
-            )
-        )
+        // let fileReference = addObject(
+        //     PBXFileReference(
+        //         sourceTree: .sourceRoot,
+        //         name: absolutePath.lastComponent,
+        //         lastKnownFileType: "folder",
+        //         path: fileReferencePath
+        //     )
+        // )
 
-        if parentGroup == "" {
-            rootGroups.insert(fileReference)
-        } else {
-            let parentGroups = parentGroup.components(separatedBy: "/")
-            createParentGroups(parentGroups, for: fileReference)
-        }
+        // if parentGroup == "" {
+        //     rootGroups.insert(fileReference)
+        // } else {
+        //     let parentGroups = parentGroup.components(separatedBy: "/")
+        //     createParentGroups(parentGroups, for: fileReference)
+        // }
     }
 
     /// Collects an array complete of all `SourceFile` objects that make up the target based on the provided `TargetSource` definitions.
