@@ -309,6 +309,18 @@ class SourceGenerator {
     private func getGroup(path: Path, name: String? = nil, mergingChildren children: [PBXFileElement], createIntermediateGroups: Bool, hasCustomParent: Bool, isBaseGroup: Bool) -> PBXGroup {
         let groupReference: PBXGroup
 
+        for child in children where child is PBXGroup {
+            if rootGroups.contains(child),
+                let childPath = groupsByPath.first(where: { $0.value === child })?.key,
+                let relativePath = try? childPath.relativePath(from: path) {
+                child.path = relativePath.string
+                if child.name == child.path {
+                    child.name = nil
+                }
+            }
+            rootGroups.remove(child)
+        }
+
         if let cachedGroup = groupsByPath[path] {
             var cachedGroupChildren = cachedGroup.children
             for child in children {

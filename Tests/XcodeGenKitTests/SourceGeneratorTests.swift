@@ -84,6 +84,51 @@ class SourceGeneratorTests: XCTestCase {
                 try pbxProj.expectFile(paths: ["Sources", "A", "C2.0", "c.swift"], buildPhase: .sources)
             }
 
+            $0.it("keeps source subgroups in a single group when sourcing the project directory") {
+                let directories = """
+                - Extension:
+                    - a.swift
+                - b.swift
+                """
+                try createDirectories(directories)
+
+                let target = Target(name: "Test", type: .framework, platform: .iOS, sources: ["../TestDirectory"])
+
+                for createIntermediateGroups in [false, true] {
+                    let options = SpecOptions(createIntermediateGroups: createIntermediateGroups)
+                    let project = Project(basePath: directoryPath.absolute(), name: "Test", targets: [target], options: options)
+                    let pbxProj = try project.generatePbxProj()
+                    let subgroup = try unwrap(pbxProj.groups.first { $0.nameOrPath == "Extension" })
+                    let parentGroups = pbxProj.groups.filter { $0.children.contains { $0 === subgroup } }
+
+                    try expect(parentGroups.count) == 1
+                    try expect(parentGroups.first?.nameOrPath) == "TestDirectory"
+                }
+            }
+
+            $0.it("makes reused source groups relative to their parent") {
+                let directories = """
+                kimi:
+                  Module:
+                    Utilities:
+                      - a.swift
+                """
+                try createDirectories(directories)
+
+                let fileTarget = Target(name: "File", type: .framework, platform: .iOS, sources: ["kimi/Module/Utilities/a.swift"])
+                let directoryTarget = Target(name: "Directory", type: .framework, platform: .iOS, sources: ["kimi"])
+                let project = Project(basePath: directoryPath.absolute(), name: "Test", targets: [fileTarget, directoryTarget])
+
+                let pbxProj = try PBXProjGenerator(project: project).generate()
+                let subgroup = try unwrap(pbxProj.groups.first { $0.nameOrPath == "Utilities" })
+                let parentGroups = pbxProj.groups.filter { $0.children.contains { $0 === subgroup } }
+
+                try expect(parentGroups.count) == 1
+                try expect(parentGroups.first?.nameOrPath) == "Module"
+                try expect(subgroup.path) == "Utilities"
+                try pbxProj.expectFile(paths: ["kimi", "Module", "Utilities", "a.swift"], buildPhase: .sources)
+            }
+
             $0.it("supports frameworks in sources") {
                 let directories = """
                 Sources:
